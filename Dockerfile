@@ -20,7 +20,7 @@ RUN pip3 install -r requirements.txt
 FROM python:3.7-alpine AS final
 COPY --from=builder /usr/local/lib/python3.7/site-packages/ /usr/local/lib/python3.7/site-packages/
 COPY --from=builder /usr/local/bin/gunicorn /usr/local/bin/gunicorn
-RUN apk update && apk add gettext nginx libpq
+RUN apk update && apk add gettext nginx libpq libxcb
 WORKDIR /opt
 RUN mkdir -p /run/nginx
 COPY docker/nginx.conf /opt/
