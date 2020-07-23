@@ -15,18 +15,17 @@ class SnippetDetail(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, format=None):
-        name=request.data['name']
+        name = request.data['name']
         snippet = Snippet.objects.get(name=name)
         
         return Response(snippet.to_json())
 
     def put(self, request, format=None):
-        print(request.data)
         data = request.data
-        print(data['name'])
         snippet = Snippet(
             name=data['name'],
             body=data['body'],
+            language=data['language'],
             created_by=request.user
         )
         snippet.save()

@@ -10,7 +10,7 @@ class Snippet(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     name = models.CharField(max_length=50, unique=True)
     body = models.TextField()
-    language = models.CharField(max_length=25,choices=language_choices, blank=True, null=True)
+    language = models.CharField(max_length=25, blank=True, null=True)
 
     def __str__(self):
         return f'{self.name}'
