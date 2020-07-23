@@ -2,7 +2,6 @@
 set -e
 
 python manage.py migrate
-python manage.py collectstatic
 
 if [ "$STAGE" = 'dev' ] 
 then
@@ -11,4 +10,4 @@ fi
 
 envsubst < nginx.conf > /etc/nginx/nginx.conf
 nginx
-gunicorn url.wsgi
+gunicorn SnippetManager.wsgi
