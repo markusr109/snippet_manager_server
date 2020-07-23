@@ -1,0 +1,177 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC for load balancing
+  ALBListenerArn:
+    Type: String
+    Description: Application load balancer listener where routing to service is handled
+  ALBListenerRulePriority:
+    Type: Number
+    Description: Application load balancer listener rule priority [0-50000]
+  HostHeader:
+    Type: String
+    Description: Host header to use for load balancer conditional routing
+  HostHeader2:
+    Type: String
+    Description: Second Host header to use for load balancer conditional routing
+  ClusterName:
+    Type: String
+    Description: ECS cluster name
+  ServiceName:
+    Type: String
+    Description: ECS service name
+  DesiredTaskCount:
+    Type: Number
+    Description: Desired number of simultaneous tasks
+  Memory:
+    Type: Number
+    Description: Hard Limit
+  MemoryReservation:
+    Type: Number
+    Description: Desired MB memory available for task container
+  ServiceRole:
+    Type: String
+    Description: ECS service role name
+  RepositoryUri:
+    Type: String
+    Description: ECR image repository URI
+  ContainerName:
+    Type: String
+    Description: ECS task definition container name
+  HostPort:
+    Type: Number
+    Description: ECS task definition port mapping host port
+  ContainerPort:
+    Type: Number
+    Description: ECS task definition port mapping container port
+  Stage:
+    Type: String
+    Description: "Stage: DEV/TEST/PROD"
+  TargetGroupStickiness:
+    Type: String
+  GitBranch:
+    Type: String
+  DBName:
+    Type: String
+  DBEngine:
+    Type: String
+Resources:
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName:
+        Fn::Sub: ecs/${ClusterName}/${ServiceName}
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    DependsOn:
+      - LogGroup
+    Properties:
+      Family: !Ref ServiceName
+      ContainerDefinitions:
+        - PortMappings:
+            - HostPort: !Ref HostPort
+              Protocol: tcp
+              ContainerPort: !Ref ContainerPort
+          Cpu: 0
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: !Ref ContainerName
+          MemoryReservation: !Ref MemoryReservation
+          Memory: !Ref Memory
+          Image: !Ref RepositoryUri
+          Essential: true
+          Name: !Ref ContainerName
+          Environment:
+            - Name: GIT_BRANCH
+              Value: !Ref GitBranch
+            - Name: HOST_HEADER1
+              Value: !Ref HostHeader
+            - Name: HOST_HEADER2
+              Value: !Ref HostHeader2
+            - Name: STAGE
+              Value: !Ref Stage
+            - Name: DB_USERNAME
+              Value: '{{resolve:secretsmanager:Snippets:SecretString:username}}'
+            - Name: DB_PASSWORD
+              Value: '{{resolve:secretsmanager:Snippets:SecretString:password}}'
+            - Name: DB_HOST
+              Value: '{{resolve:secretsmanager:Snippets:SecretString:host}}'
+            - Name: DB_PORT
+              Value: '{{resolve:secretsmanager:Snippets:SecretString:port}}'
+            - Name: DB_NAME
+              Value: !Ref DBName
+            - Name: DB_ENGINE
+              Value: !Ref DBEngine
+            - Name: DJANGO_SECRET_KEY
+              Value: '{{resolve:secretsmanager:djangoSecretKey:SecretString:secretKey}}'
+
+  ELBTG:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: "/healthcheck"
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 5
+      Name:
+        Fn::Sub: ${ServiceName}-tg
+      Port:
+        Ref: ContainerPort
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      Matcher:
+        HttpCode: 200-499
+      VpcId:
+        Ref: VpcId
+      TargetGroupAttributes:
+        - Key: stickiness.enabled
+          Value: !Ref TargetGroupStickiness
+  ELBListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn:
+            Ref: ELBTG
+      Conditions:
+        - Field: host-header
+          Values:
+            - Ref: HostHeader
+            - Ref: HostHeader2
+      Priority:
+        Ref: ALBListenerRulePriority
+      ListenerArn:
+        Ref: ALBListenerArn
+  Service:
+    Type: AWS::ECS::Service
+    DependsOn:
+      - ELBListenerRule
+      - TaskDefinition
+    Properties:
+      ServiceName:
+        Ref: ServiceName
+      Cluster:
+        Ref: ClusterName
+      DesiredCount:
+        Ref: DesiredTaskCount
+      LoadBalancers:
+        - ContainerName:
+            Ref: ContainerName
+          ContainerPort:
+            Ref: ContainerPort
+          TargetGroupArn:
+            Ref: ELBTG
+      Role:
+        Ref: ServiceRole
+      TaskDefinition:
+        Ref: TaskDefinition
+Outputs:
+  TargetGroupARN:
+    Description: Setup shared ELB routing to this target group
+    Value:
+      Ref: ELBTG
