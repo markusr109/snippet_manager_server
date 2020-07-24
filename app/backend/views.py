@@ -7,6 +7,7 @@ from django.http import Http404
 from rest_framework import status
 from rest_framework import mixins
 from rest_framework import generics
+from django.db.utils import IntegrityError
 
 class SnippetDetail(APIView):
     """
@@ -16,9 +17,13 @@ class SnippetDetail(APIView):
 
     def get(self, request, format=None):
         name = request.data['name']
-        snippet = Snippet.objects.get(name=name)
+        try:
+            snippet = Snippet.objects.get(name=name)
+            return Response(snippet.to_json(), status=status.HTTP_200_OK)
+        except Snippet.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
         
-        return Response(snippet.to_json())
 
     def put(self, request, format=None):
         data = request.data
@@ -28,13 +33,19 @@ class SnippetDetail(APIView):
             language=data['language'],
             created_by=request.user
         )
-        snippet.save()
-        return Response(snippet.to_json())
+        try:
+            snippet.save()
+            return Response(snippet.to_json(), status=status.HTTP_201_CREATED)
+        except IntegrityError as e:
+            return Response({'status': 'failed', 'e':str(e)}, status=status.HTTP_409_CONFLICT)
 
     def delete(self, request, format=None):
         data = request.data
-        snippet = Snippet.objects.get(name=data['name'])
-        snippet.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        name = data['name']
+        try:
+            Snippet.objects.get(name=name).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Snippet.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
     
     

@@ -20,5 +20,14 @@ class Snippet(models.Model):
     
     def to_json(self):
         data = self.__dict__
-        del(data['_state'])
-        return data
+        # try:
+        #     del(data['_state'])
+        # except:
+        #     print(data)
+        return {
+            'created_by': self.created_by.id,
+            'created_at': self.created_at,
+            'name': self.name,
+            'body': self.body,
+            'language': self.language
+        }
