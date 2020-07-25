@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from django.http import Http404
 from rest_framework import status
 from rest_framework import mixins
-from rest_framework import generics
+from rest_framework import generics, viewsets
 from django.db.utils import IntegrityError
 
 class SnippetDetail(APIView):
@@ -48,4 +48,11 @@ class SnippetDetail(APIView):
         except Snippet.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
     
-    
+class SnippetList(viewsets.ViewSet):
+    """
+    A simple ViewSet for listing or retrieving users.
+    """
+    def list(self, request):
+        queryset = Snippet.objects.all()
+        serialized  = [s.to_json() for s in queryset]
+        return Response(serialized)

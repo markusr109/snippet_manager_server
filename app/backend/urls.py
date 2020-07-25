@@ -2,5 +2,6 @@ from . import views
 from django.urls import path
 
 urlpatterns = [
-    path('', views.SnippetDetail.as_view())
+    path('snippet/', views.SnippetDetail.as_view()),
+    path('snippets/', views.SnippetList.as_view(actions={'get':'list'}))
 ]
