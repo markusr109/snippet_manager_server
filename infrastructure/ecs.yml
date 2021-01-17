@@ -1,6 +1,9 @@
 ---
 AWSTemplateFormatVersion: "2010-09-09"
 Parameters:
+  VPCStack:
+    Type: String
+    Description: Name of the Stack from which VPC resource will be imported.
   HostedZoneId:
     Type: String
   ALBListenerRulePriority:
@@ -169,33 +172,33 @@ Resources:
       TaskDefinition:
         Ref: TaskDefinition
 
-  # DNSRecord:
-  #   Type: AWS::Route53::RecordSet
-  #   Properties:
-  #     HostedZoneId: !Ref HostedZoneId
-  #     Name: !Ref HostHeader
-  #     AliasTarget:
-  #       HostedZoneId:
-  #         Fn::ImportValue:
-  #           !Sub "ecs-${Stage}-alb-CanonicalHostedZoneID"
-  #       DNSName:         
-  #         Fn::ImportValue:
-  #           !Sub "ecs-${Stage}-alb-LBDNSName"
-  #     Type: A
+  DNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref HostHeader
+      AliasTarget:
+        HostedZoneId:
+          Fn::ImportValue:
+            !Sub "ecs-${Stage}-alb-CanonicalHostedZoneID"
+        DNSName:         
+          Fn::ImportValue:
+            !Sub "ecs-${Stage}-alb-LBDNSName"
+      Type: A
 
-  # DNSRecord2:
-  #   Type: AWS::Route53::RecordSet
-  #   Properties:
-  #     HostedZoneId: !Ref HostedZoneId
-  #     Name: !Ref HostHeader2
-  #     AliasTarget:
-  #       HostedZoneId:
-  #         Fn::ImportValue:
-  #           !Sub "ecs-${Stage}-alb-CanonicalHostedZoneID"
-  #       DNSName:         
-  #         Fn::ImportValue:
-  #           !Sub "ecs-${Stage}-alb-LBDNSName"
-  #     Type: A
+  DNSRecord2:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref HostHeader2
+      AliasTarget:
+        HostedZoneId:
+          Fn::ImportValue:
+            !Sub "ecs-${Stage}-alb-CanonicalHostedZoneID"
+        DNSName:         
+          Fn::ImportValue:
+            !Sub "ecs-${Stage}-alb-LBDNSName"
+      Type: A
 
 Outputs:
   TargetGroupARN:
