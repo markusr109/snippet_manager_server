@@ -3,9 +3,6 @@ AWSTemplateFormatVersion: "2010-09-09"
 Parameters:
   HostedZoneId:
     Type: String
-  ALBListenerArn:
-    Type: String
-    Description: Application load balancer listener where routing to service is handled
   ALBListenerRulePriority:
     Type: Number
     Description: Application load balancer listener rule priority [0-50000]
