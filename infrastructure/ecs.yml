@@ -1,6 +1,8 @@
 ---
 AWSTemplateFormatVersion: "2010-09-09"
 Parameters:
+  HostedZoneId:
+    Type: String
   ALBListenerArn:
     Type: String
     Description: Application load balancer listener where routing to service is handled
@@ -169,6 +171,35 @@ Resources:
         Ref: ServiceRole
       TaskDefinition:
         Ref: TaskDefinition
+
+  DNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref HostHeader
+      AliasTarget:
+        HostedZoneId:
+          Fn::ImportValue:
+            !Sub "ecs-${Stage}-alb-CanonicalHostedZoneID"
+        DNSName:         
+          Fn::ImportValue:
+            !Sub "ecs-${Stage}-alb-LBDNSName"
+      Type: A
+
+  DNSRecord2:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref HostHeader2
+      AliasTarget:
+        HostedZoneId:
+          Fn::ImportValue:
+            !Sub "ecs-${Stage}-alb-CanonicalHostedZoneID"
+        DNSName:         
+          Fn::ImportValue:
+            !Sub "ecs-${Stage}-alb-LBDNSName"
+      Type: A
+
 Outputs:
   TargetGroupARN:
     Description: Setup shared ELB routing to this target group
