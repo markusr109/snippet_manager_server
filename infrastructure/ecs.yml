@@ -146,7 +146,8 @@ Resources:
       Priority:
         Ref: ALBListenerRulePriority
       ListenerArn:
-        Ref: ALBListenerArn
+        Fn::ImportValue:
+          !Sub "ecs-${Stage}-alb-HTTPSListener"
   Service:
     Type: AWS::ECS::Service
     DependsOn:
