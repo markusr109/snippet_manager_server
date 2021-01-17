@@ -1,9 +1,6 @@
 ---
 AWSTemplateFormatVersion: "2010-09-09"
 Parameters:
-  VpcId:
-    Type: AWS::EC2::VPC::Id
-    Description: VPC for load balancing
   ALBListenerArn:
     Type: String
     Description: Application load balancer listener where routing to service is handled
@@ -127,7 +124,8 @@ Resources:
       Matcher:
         HttpCode: 200-499
       VpcId:
-        Ref: VpcId
+        Fn::ImportValue:
+          !Sub "${VPCStack}-vpcId"
       TargetGroupAttributes:
         - Key: stickiness.enabled
           Value: !Ref TargetGroupStickiness
