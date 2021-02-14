@@ -1,9 +1,6 @@
 ---
 AWSTemplateFormatVersion: "2010-09-09"
 Parameters:
-  VPCStack:
-    Type: String
-    Description: Name of the Stack from which VPC resource will be imported.
   HostedZoneId:
     Type: String
   ALBListenerRulePriority:
@@ -127,7 +124,7 @@ Resources:
         HttpCode: 200-499
       VpcId:
         Fn::ImportValue:
-          !Sub "${VPCStack}-vpcId"
+          !Sub "${Stage}-VPCId"
       TargetGroupAttributes:
         - Key: stickiness.enabled
           Value: !Ref TargetGroupStickiness
@@ -147,7 +144,7 @@ Resources:
         Ref: ALBListenerRulePriority
       ListenerArn:
         Fn::ImportValue:
-          !Sub "ecs-${Stage}-alb-HTTPSListener"
+          !Sub "${Stage}-HTTPSListener"
   Service:
     Type: AWS::ECS::Service
     DependsOn:
@@ -180,10 +177,10 @@ Resources:
       AliasTarget:
         HostedZoneId:
           Fn::ImportValue:
-            !Sub "ecs-${Stage}-alb-CanonicalHostedZoneID"
+            !Sub "${Stage}-CanonicalHostedZoneID"
         DNSName:         
           Fn::ImportValue:
-            !Sub "ecs-${Stage}-alb-LBDNSName"
+            !Sub "${Stage}-LBDNSName"
       Type: A
 
   DNSRecord2:
@@ -194,10 +191,10 @@ Resources:
       AliasTarget:
         HostedZoneId:
           Fn::ImportValue:
-            !Sub "ecs-${Stage}-alb-CanonicalHostedZoneID"
+            !Sub "${Stage}-CanonicalHostedZoneID"
         DNSName:         
           Fn::ImportValue:
-            !Sub "ecs-${Stage}-alb-LBDNSName"
+            !Sub "${Stage}-LBDNSName"
       Type: A
 
 Outputs:
