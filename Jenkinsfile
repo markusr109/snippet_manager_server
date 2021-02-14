@@ -18,7 +18,7 @@ pipeline {
       steps {
         sh 'cat infrastructure/ecs-settings-$GIT_BRANCH.properties infrastructure/ecs-settings-common.properties > $PARAMETER_FILE'
         sh 'aws cloudformation deploy --stack-name $SERVICE-$GIT_BRANCH --template-file infrastructure/ecs.yml --parameter-overrides $(envsubst < $PARAMETER_FILE)'
-        sh 'aws ecs update-service --force-new-deployment --service $SERVICE-$GIT_BRANCH --cluster dev'
+        sh 'aws ecs update-service --force-new-deployment --service $SERVICE-$GIT_BRANCH --cluster $GIT_BRANCH'
       }
     }
 
